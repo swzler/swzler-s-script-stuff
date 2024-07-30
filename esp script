@@ -1,0 +1,92 @@
+-- Define the ESP functions
+local function createESPBox(character)
+    local highlight = Instance.new("Highlight")
+    highlight.Parent = character
+    highlight.Adornee = character
+    highlight.FillTransparency = 1
+    highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
+    highlight.OutlineTransparency = 0
+end
+
+local function removeESPBox(character)
+    for _, highlight in ipairs(character:GetChildren()) do
+        if highlight:IsA("Highlight") then
+            highlight:Destroy()
+        end
+    end
+end
+
+local function createDisplayName(character, player)
+    local billboardGui = Instance.new("BillboardGui")
+    billboardGui.Parent = character.Head
+    billboardGui.Size = UDim2.new(0, 200, 0, 50)
+    billboardGui.Adornee = character.Head
+    billboardGui.AlwaysOnTop = true
+
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Parent = billboardGui
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = player.DisplayName
+    textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    textLabel.TextStrokeTransparency = 0.5
+end
+
+local function removeDisplayName(character)
+    for _, gui in ipairs(character.Head:GetChildren()) do
+        if gui:IsA("BillboardGui") then
+            gui:Destroy()
+        end
+    end
+end
+
+-- Add ESP to all players
+local function addESPToPlayers()
+    for _, player in pairs(game.Players:GetPlayers()) do
+        if player.Character then
+            createESPBox(player.Character)
+            createDisplayName(player.Character, player)
+        end
+        player.CharacterAdded:Connect(function(character)
+            createESPBox(character)
+            createDisplayName(character, player)
+        end)
+    end
+end
+
+-- Remove ESP from all players
+local function removeESPFromPlayers()
+    for _, player in pairs(game.Players:GetPlayers()) do
+        if player.Character then
+            removeESPBox(player.Character)
+            removeDisplayName(player.Character)
+        end
+    end
+end
+
+-- Listen for player added/removed events
+game.Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(character)
+        createESPBox(character)
+        createDisplayName(character, player)
+    end)
+end)
+
+game.Players.PlayerRemoving:Connect(function(player)
+    removeESPBox(player.Character)
+    removeDisplayName(player.Character)
+end)
+
+-- Optional: Add a button to toggle ESP on and off
+local toggleESP = true
+game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.E then -- Press E to toggle ESP
+        toggleESP = not toggleESP
+        if toggleESP then
+            addESPToPlayers()
+        else
+            removeESPFromPlayers()
+        end
+    end
+end)
